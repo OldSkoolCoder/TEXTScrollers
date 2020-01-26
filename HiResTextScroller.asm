@@ -1,14 +1,36 @@
+ifdef TGT_C64
 ; 10 SYS (2064)
-
 *=$0801
 
     BYTE    $0E, $08, $0A, $00, $9E, $20, $28,  $32, $30, $36, $34, $29, $00, $00, $00
 
 *=$0810
+Endif
+
+ifdef TGT_VIC20
+; 10 SYS (4112)
+
+*=$1001
+
+    BYTE    $0E, $10, $0A, $00, $9E, $20, $28,  $34, $31, $31, $32, $29, $00, $00, $00
+
+*=$1010
+endif
     jmp StartScroller
 
-ChrArea =$3200          ; User Definded Character Area
-ChrRom  =$D000          ; ChrSet Rom Area
+ifdef TGT_C64
+ChrArea     = $3200     ; User Definded Character Area
+ChrRom      = $D000     ; ChrSet Rom Area
+ScreenStart = $0400     ; Screen
+LineSize    = 40
+endif
+
+ifdef TGT_VIC20
+ChrArea     = $1A00     ; User Definded Character Area
+ChrRom      = $8000     ; ChrSet Rom Area
+ScreenStart = $1E00     ; Screen
+LineSize    = 22
+endif
 
 ; 40 character mapping table
 ChrAreaLo
@@ -60,12 +82,21 @@ InitScreen
 @Looper
     tya
     ora #64     ; Add 64 to Character
-    sta $0400,y
+    sta ScreenStart,y
     iny
-    cpy #40     ; 40 Characters in 1 Line
-    bne @looper 
+    cpy #LineSize     ; xx Characters in 1 Line
+    bne @looper
+ 
+ifdef TGT_C64
     lda #28     ; Set VIC Chip To Right Charater Mapping Memory    
     sta $d018   ;
+endif
+ifdef TGT_VIC20
+    lda #$FE
+    sta $9005   ; Set VIC Chip
+    lda #0
+    sta $900F   ; Set Background to black
+endif
     rts
 
 ; Initialise The Text Scroller Pointers
@@ -91,23 +122,35 @@ GrabCharacter
     rol CharacterLoc + 2
     sta CharacterLoc + 1
     clc
-    lda #$D0
+    lda #>ChrRom
     adc CharacterLoc + 2
     sta CharacterLoc + 2
+
+ifdef TGT_C64
     sei                     ; disable interrupts while we copy
     lda #$33                ; make the CPU see the Character Generator ROM...
     sta $01                 ; ...at $D000 by storing %00110011 into location $01
+endif
+
     ldy #$00                
 GCLoop
 CharacterLoc
-    lda $D000,y             
-    sta $3340,y             ; write to the RAM Charcter 40
+    lda ChrRom,y
+ifdef TGT_C64             
+    sta ChrArea + $0140,y             ; write to the RAM Charcter 40
+endif
+
+ifdef TGT_VIC20
+    sta ChrArea + $B0,y
+endif
     iny
     cpy #8
     bne GCLoop              ; ..for low byte $00 to $FF
     lda #$37                ; switch in I/O mapped registers again...
+ifdef TGT_C64
     sta $01                 ; ... with %00110111 so CPU can see them
     cli                     ; turn off interrupt disable flag
+endif
     rts
 
 ; Get the Next Charater in the Message
@@ -144,9 +187,18 @@ TextScroller
     pha
     jsr ScrollOverOnePixel
 @loop
+ifdef TGT_C64
     lda #200                 ; Scanline -> A
     cmp $D012              ; Compare A to current raster line
     bne @loop               ; Loop if raster line not reached 255
+endif
+
+ifdef TGT_VIC20
+    lda #100                 ; Scanline/2 -> A
+    cmp $9004              ; Compare A to current raster line
+    bne @loop               ; Loop if raster line not reached 255
+
+endif
     pla
     clc
     adc #1
@@ -155,7 +207,7 @@ TextScroller
     jmp TextScroller
 
 ScrollOverOnePixel
-    ldy #40
+    ldy #LineSize
     lda ChrAreaLo,y
     sta ChrByteLoc + 1
     lda ChrAreaHi,y

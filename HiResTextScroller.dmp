@@ -1,0 +1,245 @@
+00009  0001             
+00011  0001             ; 10 SYS (4112)
+00012  0001             
+00013  0001             *=$1001
+00014  1001             
+00015  1001  0E 10 0A              BYTE    $0E, $10, $0A, $00, $9E, $20, $28,  $34, $31, $31, $32, $29, $00, $00, $00
+00016  1010             
+00017  1010             *=$1010
+00019  1010  4C 51 11              JMP STARTSCROLLER
+00020  1013             
+00027  1013             
+00029  1013             CHRAREA    = $1A00     ; USER DEFINDED CHARACTER AREA
+00030  1013             CHRROM     = $8000     ; CHRSET ROM AREA
+00031  1013             SCREENSTART = $1E00     ; SCREEN
+00032  1013             LINESIZE   = 22
+00034  1013             
+00035  1013             ; 40 CHARACTER MAPPING TABLE
+00036  1013             CHRAREALO
+00037  1013  00 08 10              BYTE $00,$08,$10,$18,$20,$28,$30,$38,$40,$48
+00038  101D  50 58 60              BYTE $50,$58,$60,$68,$70,$78,$80,$88,$90,$98
+00039  1027  A0 A8 B0              BYTE $A0,$A8,$B0,$B8,$C0,$C8,$D0,$D8,$E0,$E8,$F0,$F8
+00040  1033  00 08 10              BYTE $00,$08,$10,$18,$20,$28,$30,$38,$40,$48
+00041  103D             
+00042  103D             CHRAREAHI
+00043  103D  1A 1A 1A              BYTE >CHRAREA,>CHRAREA,>CHRAREA,>CHRAREA,>CHRAREA,>CHRAREA,>CHRAREA,>CHRAREA,>CHRAREA,>CHRAREA
+00044  1047  1A 1A 1A              BYTE >CHRAREA,>CHRAREA,>CHRAREA,>CHRAREA,>CHRAREA,>CHRAREA,>CHRAREA,>CHRAREA,>CHRAREA,>CHRAREA
+00045  1051  1A 1A 1A              BYTE >CHRAREA,>CHRAREA,>CHRAREA,>CHRAREA,>CHRAREA,>CHRAREA,>CHRAREA,>CHRAREA,>CHRAREA,>CHRAREA, >CHRAREA,>CHRAREA
+00046  105D  1B 1B 1B              BYTE >CHRAREA+1,>CHRAREA+1,>CHRAREA+1,>CHRAREA+1,>CHRAREA+1,>CHRAREA+1,>CHRAREA+1,>CHRAREA+1,>CHRAREA+1,>CHRAREA+1
+00047  1067             
+00048  1067             ; TEXT TO SCROLL
+00049  1067             TEXTTOSCROLL 
+00050  1067  14 08 09              TEXT 'THIS WAS A FILM FROM OLDSKOOLCODER (C) JUN 2019. '
+00051  1098  07 09 14              TEXT 'GITHUB : HTTPS://GITHUB.COM/OLDSKOOLCODER/ '
+00052  10C3  14 17 09              TEXT 'TWITTER : @OLDSKOOLCODER EMAIL : OLDSKOOLCODER@OUTLOOK.COM '
+00053  10FE  10 0C 05              TEXT 'PLEASE SUPPORT ME ON PATREON @ HTTPS://WWW.PATREON.COM/'
+00054  1135  0F 0C 04              TEXT 'OLDSKOOLCODER THANK YOU ;-)'
+00055  1150  FF                    BYTE 255
+00056  1151             
+00057  1151             ; MAIN ROUTINE
+00058  1151             STARTSCROLLER 
+00059  1151  20 5B 11              JSR INITCHARACTERAREA
+00060  1154  20 6B 11              JSR INITSCREEN
+00061  1157  20 DF 11              JSR TEXTSCROLLER
+00062  115A  60                    RTS
+00063  115B             
+00064  115B             ; INITIALISE THE USER DEFINED CHARACTER AREA
+00065  115B             INITCHARACTERAREA 
+00066  115B  A0 00                 LDY #0
+00067  115D  A9 00                 LDA #0
+00068  115F             @INNER
+00069  115F  99 00 1A              STA CHRAREA,Y       ; SET FIRST BANK
+00070  1162  99 00 1B              STA CHRAREA+$100,Y  ; SET SECOND BANK
+00071  1165  C8                    INY
+00072  1166  C0 00                 CPY #0
+00073  1168  D0 F5                 BNE @INNER
+00074  116A  60                    RTS
+00075  116B             
+00076  116B             ; INITIALISE THE SCREEN
+00077  116B             INITSCREEN 
+00078  116B  A9 93                 LDA #$93    ; CLEAR SCREEN
+00079  116D  20 D2 FF              JSR $FFD2   ; OUTPUT CHARACTER
+00080  1170             
+00081  1170  A0 00                 LDY #0
+00082  1172             @LOOPER
+00083  1172  98                    TYA
+00084  1173  09 40                 ORA #64     ; ADD 64 TO CHARACTER
+00085  1175  99 00 1E              STA SCREENSTART,Y
+00086  1178  C8                    INY
+00087  1179  C0 16                 CPY #LINESIZE     ; XX CHARACTERS IN 1 LINE
+00088  117B  D0 F5                 BNE @LOOPER
+00089  117D                        
+00095  117D  A9 FE                 LDA #$FE
+00096  117F  8D 05 90              STA $9005   ; SET VIC CHIP
+00097  1182  A9 00                 LDA #0
+00098  1184  8D 0F 90              STA $900F   ; SET BACKGROUND TO BLACK
+00100  1187  60                    RTS
+00101  1188             
+00102  1188             ; INITIALISE THE TEXT SCROLLER POINTERS
+00103  1188             INITTEXTSCROLLER 
+00104  1188  A0 67                 LDY #<TEXTTOSCROLL
+00105  118A  8C C5 11              STY TEXTLOADER + 1
+00106  118D  A0 10                 LDY #>TEXTTOSCROLL
+00107  118F  8C C6 11              STY TEXTLOADER + 2
+00108  1192  60                    RTS
+00109  1193             
+00110  1193             ; GRAB THE CHARACTER DEFINITION FROM CHR ROM
+00111  1193             GRABCHARACTER 
+00112  1193                        ; REGISTER Y HAS CHARACTER CODE TO COPY
+00113  1193  A9 00                 LDA #0
+00114  1195  8D B7 11              STA CHARACTERLOC + 1
+00115  1198  8D B8 11              STA CHARACTERLOC + 2
+00116  119B  98                    TYA
+00117  119C  0A                    ASL                     ; X2
+00118  119D  2E B8 11              ROL CHARACTERLOC + 2
+00119  11A0  0A                    ASL                     ; X4
+00120  11A1  2E B8 11              ROL CHARACTERLOC + 2
+00121  11A4  0A                    ASL                     ; X8
+00122  11A5  2E B8 11              ROL CHARACTERLOC + 2
+00123  11A8  8D B7 11              STA CHARACTERLOC + 1
+00124  11AB  18                    CLC
+00125  11AC  A9 80                 LDA #>CHRROM
+00126  11AE  6D B8 11              ADC CHARACTERLOC + 2
+00127  11B1  8D B8 11              STA CHARACTERLOC + 2
+00128  11B4             
+00134  11B4             
+00135  11B4  A0 00                 LDY #$00
+00136  11B6             GCLOOP
+00137  11B6             CHARACTERLOC 
+00138  11B6  B9 00 80              LDA CHRROM,Y
+00142  11B9             
+00144  11B9  99 B0 1A              STA CHRAREA + $B0,Y
+00146  11BC  C8                    INY
+00147  11BD  C0 08                 CPY #8
+00148  11BF  D0 F5                 BNE GCLOOP              ; ..FOR LOW BYTE $00 TO $FF
+00149  11C1  A9 37                 LDA #$37                ; SWITCH IN I/O MAPPED REGISTERS AGAIN...
+00154  11C3  60                    RTS
+00155  11C4             
+00156  11C4             ; GET THE NEXT CHARATER IN THE MESSAGE
+00157  11C4             GETCHARACTERINMESSAGE 
+00158  11C4             TEXTLOADER 
+00159  11C4  AD 67 10              LDA TEXTTOSCROLL
+00160  11C7  48                    PHA
+00161  11C8  C9 FF                 CMP #255
+00162  11CA  F0 11                 BEQ @ENDOFTEXT
+00163  11CC  18                    CLC
+00164  11CD  AD C5 11              LDA TEXTLOADER + 1
+00165  11D0  69 01                 ADC #1
+00166  11D2  8D C5 11              STA TEXTLOADER + 1
+00167  11D5  AD C6 11              LDA TEXTLOADER + 2
+00168  11D8  69 00                 ADC #0
+00169  11DA  8D C6 11              STA TEXTLOADER + 2
+00170  11DD             @ENDOFTEXT 
+00171  11DD  68                    PLA
+00172  11DE  60                    RTS
+00173  11DF             
+00174  11DF             ; THE MAIN TEXT SMOOTH SCROLLING ROUTINE
+00175  11DF             TEXTSCROLLER 
+00176  11DF  20 C4 11              JSR GETCHARACTERINMESSAGE
+00177  11E2  C9 FF                 CMP #255
+00178  11E4  D0 01                 BNE @STILLGOING
+00179  11E6  60                    RTS
+00180  11E7             
+00181  11E7             @STILLGOING 
+00182  11E7  A8                    TAY
+00183  11E8  20 93 11              JSR GRABCHARACTER
+00184  11EB  A9 00                 LDA #0
+00185  11ED             
+00186  11ED             @DONEXTPIXEL 
+00187  11ED  48                    PHA
+00188  11EE  20 03 12              JSR SCROLLOVERONEPIXEL
+00189  11F1             @LOOP
+00195  11F1             
+00197  11F1  A9 64                 LDA #100                 ; SCANLINE/2 -> A
+00198  11F3  CD 04 90              CMP $9004              ; COMPARE A TO CURRENT RASTER LINE
+00199  11F6  D0 F9                 BNE @LOOP               ; LOOP IF RASTER LINE NOT REACHED 255
+00200  11F8             
+00202  11F8  68                    PLA
+00203  11F9  18                    CLC
+00204  11FA  69 01                 ADC #1
+00205  11FC  C9 08                 CMP #8
+00206  11FE  D0 ED                 BNE @DONEXTPIXEL
+00207  1200  4C DF 11              JMP TEXTSCROLLER
+00208  1203             
+00209  1203             SCROLLOVERONEPIXEL 
+00210  1203  A0 16                 LDY #LINESIZE
+00211  1205  B9 13 10              LDA CHRAREALO,Y
+00212  1208  8D 19 12              STA CHRBYTELOC + 1
+00213  120B  B9 3D 10              LDA CHRAREAHI,Y
+00214  120E  8D 1A 12              STA CHRBYTELOC + 2
+00215  1211  A9 00                 LDA #0
+00216  1213  18                    CLC
+00217  1214             ROTATETHENEXTCHARACTER 
+00218  1214  A2 00                 LDX #0
+00219  1216             
+00220  1216             ROTATETHE8BYTES 
+00221  1216  48                    PHA
+00222  1217  2A                    ROL
+00223  1218             CHRBYTELOC 
+00224  1218  3E 18 12              ROL CHRBYTELOC,X
+00225  121B  68                    PLA
+00226  121C  2A                    ROL
+00227  121D  E8                    INX
+00228  121E  E0 08                 CPX #8
+00229  1220  D0 F4                 BNE ROTATETHE8BYTES
+00230  1222             
+00231  1222                        ; ACCUMULTOR NOW CONTAINS THE VERTICAL PIXEL PATTERN
+00232  1222                        ; NOW TO APPLY TO PREVIOUS 8 BYTES
+00233  1222  48                    PHA
+00234  1223  38                    SEC
+00235  1224  AD 19 12              LDA CHRBYTELOC + 1
+00236  1227  E9 08                 SBC #8
+00237  1229  8D 19 12              STA CHRBYTELOC + 1
+00238  122C  AD 1A 12              LDA CHRBYTELOC + 2
+00239  122F  E9 00                 SBC #0
+00240  1231  8D 1A 12              STA CHRBYTELOC + 2
+00241  1234  68                    PLA
+00242  1235  88                    DEY
+00243  1236  C0 FF                 CPY #255
+00244  1238  D0 DA                 BNE ROTATETHENEXTCHARACTER
+00245  123A  60                    RTS
+00246  123B             
+00247  123B             
+
+******* 17 Label(s) *******
+CharacterLoc = $11B6 
+ChrAreaHi = $103D 
+ChrAreaLo = $1013 
+ChrByteLoc = $1218 
+GCLoop = $11B6 
+GetCharacterInMessage = $11C4 
+GrabCharacter = $1193 
+InitCharacterArea = $115B 
+InitScreen = $116B 
+InitTextScroller = $1188 
+Rotatethe8Bytes = $1216 
+RotateTheNextCharacter = $1214 
+ScrollOverOnePixel = $1203 
+StartScroller = $1151 
+TextLoader = $11C4 
+TextScroller = $11DF 
+TEXTToScroll = $1067 
+
+******* 4 Unused label(s) *******
+@DoNextPixel
+@EndOfText
+@Inner
+@loop
+@Looper
+@StillGoing
+CharacterLoc
+InitTextScroller
+StartScroller
+TextLoader
+
+******* 5 Variable(s) *******
+ChrArea  = $1A00
+ChrRom  = $8000
+LineSize  = $0016
+ScreenStart  = $1E00
+tgt_vic20  = $0001
+******* -3 Unused variables(s) *******
+ChrArea
+ScreenStart
+tgt_vic20
+

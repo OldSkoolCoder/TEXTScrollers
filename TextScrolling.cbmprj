@@ -39,6 +39,7 @@
     <BuildList>
         <FileName>HiResTextScroller.asm</FileName>
         <FileName>TextScrolling.asm</FileName>
+        <FileName>InterruptTextScroller.asm</FileName>
     </BuildList>
     <DetermineBuildOrder>0</DetermineBuildOrder>
     <PaddingByte>0</PaddingByte>
@@ -50,9 +51,27 @@
             <FileType>2</FileType>
             <IncludeInBuild>True</IncludeInBuild>
             <Regions />
-            <Breakpoints />
+            <Breakpoints>
+                <Breakpoint>133</Breakpoint>
+                <BreakpointDetails>True;0;0;2;2481;False;133;False;0</BreakpointDetails>
+                <Enabled>True</Enabled>
+                <Breakpoint>144</Breakpoint>
+                <BreakpointDetails>True;0;0;2;2490;False;144;False;0</BreakpointDetails>
+                <Enabled>True</Enabled>
+            </Breakpoints>
             <Bookmarks />
             <Topmost>True</Topmost>
+            <FileOpen>True</FileOpen>
+        </SourceFile>
+        <SourceFile>
+            <Name>InterruptTextScroller.asm</Name>
+            <PrgName />
+            <FileType>2</FileType>
+            <IncludeInBuild>True</IncludeInBuild>
+            <Regions />
+            <Breakpoints />
+            <Bookmarks />
+            <Topmost>False</Topmost>
             <FileOpen>True</FileOpen>
         </SourceFile>
         <SourceFile>
