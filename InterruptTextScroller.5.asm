@@ -8,11 +8,14 @@
 incasm "VIC II Constants.asm"
 
 SCREENROW   = 1824 ; (20 rows down)
-RasterTop       = $D0
-RasterBottom    = $DB
+RasterTop       = $D1
+RasterBottom    = $DA
 NoOfRasterLines = $06
 NoOfColours     = $40
 
+    lda #$00
+    sta VICII_EXTCOL
+    sta VICII_BGCOL0
     lda #144
     jsr $ffd2
     lda #147        ; Clear Screen
@@ -47,6 +50,9 @@ NoOfColours     = $40
 @ScreenLoad
     lda VideoRamColour,x
     sta $0400,x
+    lda #160
+    sta SCREENROW-40,x
+    sta SCREENROW,x
     inx
     cpx #$40
     bne @ScreenLoad
@@ -84,6 +90,8 @@ VideoRamColour
 INTERRUPT
     lda VICII_EXTCOL
     sta EXTCOL_BKUP
+    ;lda #$CE
+    ;sta VICII_RASTER
     
     lda #RasterTop
 @Loop
@@ -106,6 +114,7 @@ INTERRUPT
     inx
 
     lda #RasterBottom
+;@Loop1
     cmp VICII_RASTER
     bne @ColourLoop3
 
@@ -144,6 +153,7 @@ RotateColours
     sta $03FF + NoOfColours
     rts
 
+
 TextLooper
     ldx #0
 
@@ -158,6 +168,7 @@ TextLoader
     lda TEXTToScroll
     cmp #255
     beq EndOfText
+    ora #128
     sta SCREENROW+39
     clc
     lda TextLoader + 1

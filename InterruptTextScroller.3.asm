@@ -8,14 +8,11 @@
 incasm "VIC II Constants.asm"
 
 SCREENROW   = 1824 ; (20 rows down)
-RasterTop       = $D0
-RasterBottom    = $DB
-NoOfRasterLines = $06
-NoOfColours     = $40
 
-    lda #144
-    jsr $ffd2
-    lda #147        ; Clear Screen
+    ;lda #$00
+    ;sta VICII_EXTCOL
+    ;sta VICII_BGCOL0
+    lda #147
     jsr $ffd2
     sei
     lda #VICII_SCROLY_FineScroll_RasterNoCompareMask
@@ -42,14 +39,6 @@ NoOfColours     = $40
     sta TextLoader + 2
     lda #0
     sta TEXT_FRAME_COUNTER
-
-    ldx #$00
-@ScreenLoad
-    lda VideoRamColour,x
-    sta $0400,x
-    inx
-    cpx #$40
-    bne @ScreenLoad
     cli
     rts
 
@@ -77,44 +66,29 @@ TEXTToScroll
     TEXT 'oldskoolcoder thank you ;-)                               '
     BYTE 255
 
-VideoRamColour
-    TEXT '  bbhhhjjjqqqjjjhhhbb  eeeccmmmqqqmmmccee  ffkknnnqqqnnnkkff       '
-    BRK
-
 INTERRUPT
     lda VICII_EXTCOL
     sta EXTCOL_BKUP
+    ;lda #$CE
+    ;sta VICII_RASTER
     
-    lda #RasterTop
+    lda #$d2
 @Loop
     cmp VICII_RASTER
     bne @Loop
 
+    lda $0400
+    sta VICII_EXTCOL
     lda TEXT_FRAME_COUNTER
     sta VICII_SCROLX
 
-    ldx #0
-@ColourLoop3
-    lda $0400,x
-    tay
-    lda VICII_RASTER
-@ColourLoop2
+    lda #$DB
+@Loop1
     cmp VICII_RASTER
-    beq @ColourLoop2
-
-    sty VICII_BGCOL0
-    inx
-
-    lda #RasterBottom
-    cmp VICII_RASTER
-    bne @ColourLoop3
+    bne @Loop1
 
     lda EXTCOL_BKUP
     sta VICII_EXTCOL
-
-    lda BGCOL_BKUP
-    sta VICII_BGCOL0
-
     lda #$c8
     sta VICII_SCROLX
     asl VICII_VICIRQ
@@ -128,21 +102,9 @@ INTERRUPT
     jsr TextLooper
 
 @BYPASSSCROLLER
-    jsr RotateColours
-
     jmp $ea31
 
-RotateColours
-    ldx #$00
-@Loop
-    lda $0401,x
-    sta $0400,x
-    inx
-    cpx #NoOfColours
-    bne @Loop
-    lda $0400
-    sta $03FF + NoOfColours
-    rts
+
 
 TextLooper
     ldx #0

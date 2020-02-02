@@ -84,6 +84,8 @@ VideoRamColour
 INTERRUPT
     lda VICII_EXTCOL
     sta EXTCOL_BKUP
+    ;lda #$CE
+    ;sta VICII_RASTER
     
     lda #RasterTop
 @Loop
@@ -106,6 +108,7 @@ INTERRUPT
     inx
 
     lda #RasterBottom
+;@Loop1
     cmp VICII_RASTER
     bne @ColourLoop3
 
@@ -143,6 +146,7 @@ RotateColours
     lda $0400
     sta $03FF + NoOfColours
     rts
+
 
 TextLooper
     ldx #0
