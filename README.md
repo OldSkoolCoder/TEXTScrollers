@@ -11,6 +11,7 @@ This festive mini series (Xmas 2019) will go through the development and thought
 * Week 2 : Conversion of this BASIC Language TEXT scroller into 6502 assembly
 * Week 3 : Hi-Resolution Smooth Text scroller in Assembly Language (as BASIC was WAY TOOO SLOW!!! lol)
 * Week 4 : Smooth scrolling text scroller in Assembly utilising the VIC II inbuilt scrolling attributes.
+* Week 5 : Interrupt driven text scrolling on the C64 using the hardware smooth scrolling aspects of the VIC II Chip.
 
 Enjoy
 
